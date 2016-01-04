@@ -47,7 +47,8 @@ FSS.SVGRenderer.prototype.render = function(scene) {
         points  = this.formatPoint(triangle.a)+' ';
         points += this.formatPoint(triangle.b)+' ';
         points += this.formatPoint(triangle.c);
-        style = this.formatStyle(triangle.color.format());
+        style = this.formatStyle(triangle.color.format(),
+          mesh.material.fillOpacity, mesh.material.strokeOpacity);
         triangle.polygon.setAttributeNS(null, 'points', points);
         triangle.polygon.setAttributeNS(null, 'style', style);
       }
@@ -60,8 +61,10 @@ FSS.SVGRenderer.prototype.formatPoint = function(vertex) {
   return (this.halfWidth+vertex.position[0])+','+(this.halfHeight-vertex.position[1]);
 };
 
-FSS.SVGRenderer.prototype.formatStyle = function(color) {
+FSS.SVGRenderer.prototype.formatStyle = function(color, fillOpacity, strokeOpacity) {
   var style = 'fill:'+color+';';
+  style += 'fill-opacity:'+fillOpacity+';';
   style += 'stroke:'+color+';';
+  style += 'stroke-opacity:'+strokeOpacity+';';
   return style;
 };

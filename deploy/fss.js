@@ -1,8 +1,8 @@
 //============================================================
 //
-// Copyright (C) 2013 Matthew Wagerfield
+// Copyright (C) 2014 Matthew Wagerfield
 //
-// Twitter: https://twitter.com/mwagerfield
+// Twitter: https://twitter.com/wagerfield
 //
 // Permission is hereby granted, free of charge, to any
 // person obtaining a copy of this software and associated
@@ -563,9 +563,12 @@ FSS.Plane.prototype = Object.create(FSS.Geometry.prototype);
  * @class Material
  * @author Matthew Wagerfield
  */
-FSS.Material = function(ambient, diffuse) {
+FSS.Material = function(ambient, diffuse, fillOpacity, strokeOpacity, strokeWidth) {
   this.ambient = new FSS.Color(ambient || '#444444');
   this.diffuse = new FSS.Color(diffuse || '#FFFFFF');
+  this.strokeOpacity = (strokeOpacity === undefined)? 1 : strokeOpacity;
+  this.fillOpacity = (fillOpacity === undefined)? 1 : fillOpacity;
+  this.strokeWidth = (strokeWidth === undefined)? 1 : strokeWidth;
   this.slave = new FSS.Color();
 };
 
@@ -725,13 +728,14 @@ FSS.CanvasRenderer.prototype.render = function(scene) {
 
   // Configure Context
   this.context.lineJoin = 'round';
-  this.context.lineWidth = 1;
 
   // Update Meshes
   for (m = scene.meshes.length - 1; m >= 0; m--) {
     mesh = scene.meshes[m];
     if (mesh.visible) {
       mesh.update(scene.lights, true);
+      // Configure with Material properties
+      this.context.lineWidth = mesh.material.strokeWidth;
 
       // Render Triangles
       for (t = mesh.geometry.triangles.length - 1; t >= 0; t--) {
@@ -744,7 +748,9 @@ FSS.CanvasRenderer.prototype.render = function(scene) {
         this.context.closePath();
         this.context.strokeStyle = color;
         this.context.fillStyle = color;
+        this.context.globalAlpha = mesh.material.strokeOpacity;
         this.context.stroke();
+        this.context.globalAlpha = mesh.material.fillOpacity;
         this.context.fill();
       }
     }
@@ -1206,7 +1212,8 @@ FSS.SVGRenderer.prototype.render = function(scene) {
         points  = this.formatPoint(triangle.a)+' ';
         points += this.formatPoint(triangle.b)+' ';
         points += this.formatPoint(triangle.c);
-        style = this.formatStyle(triangle.color.format());
+        style = this.formatStyle(triangle.color.format(),
+          mesh.material.fillOpacity, mesh.material.strokeOpacity);
         triangle.polygon.setAttributeNS(null, 'points', points);
         triangle.polygon.setAttributeNS(null, 'style', style);
       }
@@ -1219,8 +1226,10 @@ FSS.SVGRenderer.prototype.formatPoint = function(vertex) {
   return (this.halfWidth+vertex.position[0])+','+(this.halfHeight-vertex.position[1]);
 };
 
-FSS.SVGRenderer.prototype.formatStyle = function(color) {
+FSS.SVGRenderer.prototype.formatStyle = function(color, fillOpacity, strokeOpacity) {
   var style = 'fill:'+color+';';
+  style += 'fill-opacity:'+fillOpacity+';';
   style += 'stroke:'+color+';';
+  style += 'stroke-opacity:'+strokeOpacity+';';
   return style;
 };

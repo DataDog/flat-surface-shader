@@ -35,13 +35,14 @@ FSS.CanvasRenderer.prototype.render = function(scene) {
 
   // Configure Context
   this.context.lineJoin = 'round';
-  this.context.lineWidth = 1;
 
   // Update Meshes
   for (m = scene.meshes.length - 1; m >= 0; m--) {
     mesh = scene.meshes[m];
     if (mesh.visible) {
       mesh.update(scene.lights, true);
+      // Configure with Material properties
+      this.context.lineWidth = mesh.material.strokeWidth;
 
       // Render Triangles
       for (t = mesh.geometry.triangles.length - 1; t >= 0; t--) {
@@ -54,7 +55,9 @@ FSS.CanvasRenderer.prototype.render = function(scene) {
         this.context.closePath();
         this.context.strokeStyle = color;
         this.context.fillStyle = color;
+        this.context.globalAlpha = mesh.material.strokeOpacity;
         this.context.stroke();
+        this.context.globalAlpha = mesh.material.fillOpacity;
         this.context.fill();
       }
     }
